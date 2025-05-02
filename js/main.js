@@ -1,165 +1,72 @@
-// welcome selection
-var logout = document.querySelector('.navbar .container a');
-var welcome = document.getElementById('welcome');
-const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+let navLink = document.querySelectorAll('ul li a');
+let form = document.querySelector('form');
+let word = document.querySelector('form input[type="text"]');
+let submit = document.getElementById('submit');
 
-// login selectors
-var logMail = document.getElementById('logMail');
-var logPass = document.getElementById('logPass');
-var logRequired = document.querySelector('.logRequired');
-var logIncorrect = document.querySelector('.logIncorrect');
-var loginBtn = document.querySelector('.loginBtn');
-var reg = document.querySelector('form p .reg');
+for (let i = 0; i < navLink.length; i++) {
+    navLink[i].addEventListener('click', function () {
+        navLink.forEach(item => item.classList.remove('active'));
+        this.classList.add('active');
+    });
+}
 
-// reqestration selector
-var regName = document.getElementById('regName');
-var regMail = document.getElementById('regMail');
-var regPass = document.getElementById('regPass');
-var regRequired = document.querySelector('.regRequired');
-var regSuccess = document.querySelector('.regSuccess');
-var regExist = document.querySelector('.regExist');
-var signupBtn = document.querySelector('.signupBtn');
-var signin = document.querySelector('form .signin #sign');
+form.addEventListener('submit', function (e) {
+    e.preventDefault();
+});
 
-var form = document.querySelector('form');
-var userContainer = [];
+word.addEventListener('keyup', search);
 
-if (welcome != null) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser) {
-        welcome.innerHTML = `Welcome ${currentUser.name}`;
+async function getData(word) {
+    let req = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=ade36e0776a74d31b4994033250105&q=${word}&days=3`);
+    let response = await req.json();
+    return response;
+}
+
+function search() {
+    let country = word.value;
+    if (country.trim() !== "") {
+        getData(country).then(weatherData => {
+            displayData(weatherData);
+        });
     }
 }
 
-if(logMail != null){
-    logMail.addEventListener('focus',function(){
-        logMail.classList.add('border-info')
-    });
-}
+async function displayData(weatherData) {
+    let cartona = '';
+    for (let i = 0; i < weatherData.forecast.forecastday.length; i++) {
+        let day = weatherData.forecast.forecastday[i];
+        let date = new Date(day.date);
+        let dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
 
-if(logPass != null){
-    logPass.addEventListener('focus',function(){
-        logPass.classList.add('border-info')
-    });
-}
-
-if(regName != null){
-    regName.addEventListener('focus',function(){
-        regName.classList.add('border-info')
-    });
-}
-
-if(regMail != null){
-    regMail.addEventListener('focus',function(){
-        regMail.classList.add('border-info')
-    });
-}
-
-if(regPass != null){
-    regPass.addEventListener('focus',function(){
-        regPass.classList.add('border-info')
-    });
-}
-
-if(form != null){
-    form.addEventListener('submit',function(e){
-        e.preventDefault();
-    });
-}
-
-if(reg != null){
-
-    reg.addEventListener('click', function(){
-        window.location.href = 'Registration.html';
-    });
-}
-
-if(signin != null){
-
-    signin.addEventListener('click',function(){
-        window.location.href = 'index.html'; 
-    });
-}
-
-if(logout != null){
-
-    logout.addEventListener('click',function(){
-        window.location.href = 'index.html'; 
-    });
-}
-
-if(loginBtn != null){
-    loginBtn.addEventListener('click',function(){
-        logIn();
-    });
-}
-
-if(localStorage.getItem('users') !=null){
-    userContainer = JSON.parse(localStorage.getItem('users'));
-}else{
-    userContainer = [];
-}
-
-function findUser(userContainer){
-    console.log(regName.value);
-    return userContainer.name === regName.value && userContainer.mail === regMail.value && userContainer.password === regPass.value;
-}
-
-function signUp(){
-    var userDeails = {
-        name: regName.value,
-        mail: regMail.value,
-        password: regPass.value
+        cartona += `
+        <div class="forcast-container m-auto col-4 pb-3" id="forcast">
+            <div class="forcast">
+                <div class="header p-2 d-flex justify-content-between" id="today">
+                    <div class="day">${dayName}</div>
+                    <div class="date">${date.toLocaleDateString()}</div>
+                </div>
+                <div class="content p-3" id="current">
+                    <div class="location fs-1 p-1">${weatherData.location.name}, ${weatherData.location.country}</div>
+                    <div class="degree p-1">
+                        <span class="num text-white">${day.day.avgtemp_c}<sup>o</sup>C</span>
+                        <div><img src="${day.day.condition.icon}" alt="${day.day.condition.text}"></div>
+                    </div>
+                    <div class="text-blue p-1 m-2">${day.day.condition.text}</div>
+                    <div>
+                        <span><img class="p-1" src="./images/icon-umberella.png">${day.day.avghumidity}%</span>
+                        <span><img class="p-1" src="./images/icon-wind.png">${day.day.maxwind_kph}Km/h</span>
+                        <span><img class="p-1" src="./images/icon-compass.png">${day.day.wind_dir}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
     }
 
-    const existingUser = userContainer.find(findUser);
-
-    
-    if(userDeails.name === '' || userDeails.mail === '' || userDeails.password === ''){
-        regRequired.classList.remove('d-none');
-        regExist.classList.add('d-none');
-        regSuccess.classList.add('d-none');
-    }
-    else if(existingUser){
-        regExist.classList.remove('d-none');
-        regRequired.classList.add('d-none');
-        regSuccess.classList.add('d-none');
-    }else{
-        regRequired.classList.add('d-none');
-        regExist.classList.add('d-none');
-        regSuccess.classList.remove('d-none');
-        userContainer.push(userDeails);
-        localStorage.setItem('users',JSON.stringify(userContainer));
-        localStorage.setItem('currentUser', JSON.stringify(userDeails));
-    }
-         
-}  
-
-if(signupBtn != null){
-    signupBtn.addEventListener('click', signUp);
+    document.getElementById("weather").innerHTML = cartona;
 }
 
-function logIn() {
-    const email = logMail.value;
-    const password = logPass.value;
-
-    if (email === '' || password === '') {
-        logRequired.classList.remove('d-none');
-        logIncorrect.classList.add('d-none');
-        return;
-    }
-
-    const foundUser = userContainer.find(user =>
-        user.mail === email && user.password === password
-    );
-
-    if (foundUser) {
-        localStorage.setItem('currentUser', JSON.stringify(foundUser));
-        logRequired.classList.add('d-none');
-        logIncorrect.classList.add('d-none');
-        window.location.href = 'welcome.html';
-    } else {
-        logIncorrect.classList.remove('d-none');
-        logRequired.classList.add('d-none');
-    }
-}
+window.addEventListener('load', function() {
+    getData('Cairo').then(weatherData => {
+        displayData(weatherData);
+    });
+});
